@@ -41,7 +41,7 @@ GameWidget::~GameWidget() {
 
 void GameWidget::startGame(const int &number) {
     /* start the game */
-    //qDebug() << "startGame()";
+
     emit gameStarted(universeMode, true);
     generations = number;
     timer->start();
@@ -51,6 +51,7 @@ void GameWidget::startGame(const int &number) {
 
 void GameWidget::stopGame() {
     /* stop the game */
+
     emit gameStopped(universeMode, true);
     timer->stop();
     timerColor->stop();
@@ -58,7 +59,8 @@ void GameWidget::stopGame() {
 
 
 void GameWidget::clearGame() {
-    //qDebug() << "clearGame()";
+    /* clear the field and reset parameters if necessary */
+
     for (int k = 1; k <= universeSize; k++) {
         for (int j = 1; j <= universeSize; j++) {
             ca1.setValue(j, k, 0);
@@ -79,9 +81,9 @@ void GameWidget::clearGame() {
                 ca1.setLifetime(j, k, ca1.maxLifetime);
             }
         }
-        //qDebug() << "clearGame -> setting lifetime to max ...";
+    // all modeling games
     } else if (universeMode >= 3) {
-        ca1.generateInitRandomNoise();
+        //ca1.generateInitRandomNoise();
     }
     update();
 
@@ -357,6 +359,14 @@ void GameWidget::newGeneration() {
     case 4:
         ca1.worldEvolutionErosion();
         break;
+    // fluids
+    case 5:
+        ca1.worldEvolutionFluids();
+        break;
+    // gases
+    case 6:
+        ca1.worldEvolutionGases();
+        break;
 
     default:
         break;
@@ -397,6 +407,18 @@ void GameWidget::newGeneration() {
             break;
         // erosion
         case 4:
+            msgBox.setIcon(QMessageBox::Information);
+            msgBox.setText(headlines[0]);
+            msgBox.setInformativeText(details[0]);
+            break;
+        // fluids
+        case 5:
+            msgBox.setIcon(QMessageBox::Information);
+            msgBox.setText(headlines[0]);
+            msgBox.setInformativeText(details[0]);
+            break;
+        // gases
+        case 6:
             msgBox.setIcon(QMessageBox::Information);
             msgBox.setText(headlines[0]);
             msgBox.setInformativeText(details[0]);
@@ -459,7 +481,7 @@ void GameWidget::mousePressEvent(QMouseEvent *e) {
     // int mode[9] = {1, 3, 6, 4, 2, 8, 9, 10, 11};
 
     // game of life
-    if (universeMode == 0) {
+    if (universeMode != 2 && universeMode != 1) {
         if (ca1.getValue(j, k) != 0) {
             ca1.setValue(j, k, 0);
         }
@@ -516,12 +538,9 @@ void GameWidget::mouseMoveEvent(QMouseEvent *e) {
     // int mode[9] = {1, 3, 6, 4, 2, 8, 9, 10, 11};
 
     // game of life
-    if (universeMode == 0) {
+    if (universeMode != 2 && universeMode != 1) {
         if (ca1.getValue(j, k) == 0) {
             ca1.setValue(j, k, 1);
-//            ca1.setValue(j, k, mode[cellMode]);
-//            if (mode[cellMode] == 9 || mode[cellMode] == 10)
-//                ca1.setLifetime(j, k, 50); // lifetime = 50
             update();
         }
     }
@@ -532,26 +551,17 @@ void GameWidget::mouseMoveEvent(QMouseEvent *e) {
             if (ca1.getValue(j, k) != 1) {
                 ca1.setValue(j, k, 1);
                 ca1.setLifetime(j, k, lifeTime);
-            } else {
-                ca1.setValue(j, k, 0);
-                ca1.setLifetime(j, k, ca1.maxLifetime);
             }
             break;
         case 1: // prey
             if (ca1.getValue(j, k) != 2) {
                 ca1.setValue(j, k, 2);
                 ca1.setLifetime(j, k, lifeTime);
-            } else {
-                ca1.setValue(j, k, 0);
-                ca1.setLifetime(j, k, ca1.maxLifetime);
             }
             break;
         case 2: // food
             if (ca1.getValue(j, k) != 5) {
                 ca1.setValue(j, k, 5);
-                ca1.setLifetime(j, k, ca1.maxLifetime);
-            } else {
-                ca1.setValue(j, k, 0);
                 ca1.setLifetime(j, k, ca1.maxLifetime);
             }
             break;
@@ -629,6 +639,7 @@ void GameWidget::setMasterColor(const QColor &color) {
 // SNAKE
 void GameWidget::calcDirectionSnake(int dS) {
     /* opposing directions add up to 10 (2 + 8, 4 + 6), so past and future must NOT do so */
+
     if (dS + ca1.directionSnake.past == 10) {
         ca1.directionSnake.future = ca1.directionSnake.past; // continue with past direction if input is "invalid"
     } else {
@@ -666,13 +677,11 @@ void GameWidget::setPositionFood(int x, int y) {
 
 
 int GameWidget::getLifetime() {
-    /* get the lifetime of each cell */
     return lifeTime;
 }
 
 
 void GameWidget::setLifetime(const int &l) {
-    /* set lifetime for all cells in the universe */
     lifeTime = l;
 }
 

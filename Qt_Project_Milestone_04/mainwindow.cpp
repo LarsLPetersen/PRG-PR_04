@@ -22,9 +22,11 @@ MainWindow::MainWindow(QWidget *parent) :
     /* game choices */
     ui->universeModeControl->addItem("Game of Life");
     ui->universeModeControl->addItem("Snake");
-    ui->universeModeControl->addItem("Predator-Prey");
+    ui->universeModeControl->addItem("Predator");
     ui->universeModeControl->addItem("Noise");
     ui->universeModeControl->addItem("Erosion");
+    ui->universeModeControl->addItem("Fluids");
+    ui->universeModeControl->addItem("Gases");
 
     /* color icons for color buttons */
     QPixmap icon(16, 16);
@@ -87,6 +89,9 @@ void MainWindow::globalButtonControl(int uM) {
         ui->cellModeControl->setDisabled(true);
         ui->lifetimeControl->clear();
         ui->lifetimeControl->setDisabled(true);
+        ui->colorRandomButton->setDisabled(false);
+        ui->colorSelectButton->setDisabled(false);
+
     }
     else {
         // cell mode choices

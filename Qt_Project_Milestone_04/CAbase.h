@@ -159,6 +159,16 @@ public:
 
     void worldEvolutionErosion();
 
+    // FLUIDS
+    void cellEvolutionFluids(int x, int y);
+
+    void worldEvolutionFluids();
+
+    // GASES
+    void cellEvolutionGases(int x, int y);
+
+    void worldEvolutionGases();
+
 private:
     int Ny;
     int Nx;
@@ -978,7 +988,100 @@ inline void CAbase::worldEvolutionErosion() {
             world[iy * (Nx + 2) + ix] = worldNew[iy * (Nx + 2) + ix];
         }
     }
-
 }
+
+
+// FLUIDS
+inline void CAbase::cellEvolutionFluids(int x, int y) {
+    /* */
+    int x1, y1;
+    int n_sum = 0;
+    for (int ix = -1; ix <= 1; ix++) {
+        for (int iy = -1; iy <= 1; iy++) {
+            if (ix == 0 && iy == 0) continue;
+            x1 = x + ix;
+            y1 = y + iy;
+
+            // torify
+            if (x1 < 1) x1 = Nx;
+            if (x1 > Nx) x1 = 1;
+            if (y1 < 1) y1 = Ny;
+            if (y1 > Ny) y1 = 1;
+
+            if (getValue(x1, y1) == 1) n_sum++;
+        }
+    }
+
+    if (n_sum == 4 || n_sum > 5) {
+        setValueNew(x, y, 1);
+    } else setValueNew(x, y, 0);
+}
+
+
+inline void CAbase::worldEvolutionFluids() {
+    /* apply cell evolution to the universe */
+
+    for (int ix = 1; ix <= Nx; ix++) {
+        for (int iy = 1; iy <= Ny; iy++) {
+            cellEvolutionFluids(ix, iy);
+        }
+    }
+
+    nochanges = true;
+    /* copy new states to current states */
+    for (int ix = 1; ix <= Nx; ix++) {
+        for (int iy = 1; iy <= Ny; iy++) {
+            if (world[iy * (Nx + 2) + ix] != worldNew[iy * (Nx + 2) + ix]) {
+                nochanges = false;
+            }
+            world[iy * (Nx + 2) + ix] = worldNew[iy * (Nx + 2) + ix];
+        }
+    }
+}
+
+
+// GASES
+inline void CAbase::cellEvolutionGases(int x, int y) {
+    /* */
+
+    position down = torifyPosition(convert(x, y, 2));
+    position up = torifyPosition(convert(x, y, 8));
+    position left  = torifyPosition(convert(x, y, 4));
+    position right = torifyPosition(convert (x, y, 6));
+    position downLeft = torifyPosition(convert(convert(x, y, 2).x, convert(x, y, 2).y, 4));
+    position downRight = torifyPosition(convert(convert(x, y, 2).x, convert(x, y, 2).y, 6));
+    position upLeft = torifyPosition(convert(convert(x, y, 8).x, convert(x, y, 8).y, 4));
+    position upRight = torifyPosition(convert(convert(x, y, 8).x, convert(x, y, 8).y, 6));
+
+    int newErosion = getValue(x, y) &
+                   (getValue(up.x, up.y) | getValue(upLeft.x, upLeft.y) | getValue(upRight.x, upRight.y)) &
+                   (getValue(right.x, right.y) | getValue(downRight.x, downRight.y) | getValue(upRight.x, upRight.y)) &
+                   (getValue(down.x, down.y) | getValue(downRight.x, downRight.y) | getValue(downLeft.x, downLeft.y)) &
+                   (getValue(left.x, left.y) | getValue(downLeft.x, downLeft.y) | getValue(upLeft.x, upLeft.y));
+    setValueNew(x, y, newErosion);
+}
+
+
+inline void CAbase::worldEvolutionGases() {
+    /* apply cell evolution to the universe */
+
+    for (int ix = 1; ix <= Nx; ix++) {
+        for (int iy = 1; iy <= Ny; iy++) {
+            cellEvolutionGases(ix, iy);
+        }
+    }
+
+    nochanges = true;
+    /* copy new states to current states */
+    for (int ix = 1; ix <= Nx; ix++) {
+        for (int iy = 1; iy <= Ny; iy++) {
+            if (world[iy * (Nx + 2) + ix] != worldNew[iy * (Nx + 2) + ix]) {
+                nochanges = false;
+            }
+            world[iy * (Nx + 2) + ix] = worldNew[iy * (Nx + 2) + ix];
+        }
+    }
+}
+
 
 #endif // CABASE_H
