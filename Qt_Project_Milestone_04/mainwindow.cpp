@@ -91,7 +91,7 @@ void MainWindow::globalButtonControl(int uM) {
         ui->lifetimeControl->setDisabled(true);
         ui->colorRandomButton->setDisabled(false);
         ui->colorSelectButton->setDisabled(false);
-
+        ui->universeSizeControl->setSingleStep(1);
     }
     else {
         // cell mode choices
@@ -109,6 +109,11 @@ void MainWindow::globalButtonControl(int uM) {
         ui->colorSelectButton->setDisabled(true);
 
     }
+    // only allow universe size of even length for evolution with 2x2 Margolus neighborhoods
+    if (uM == 6) {
+        ui->universeSizeControl->setSingleStep(2);
+    }
+
 }
 
 

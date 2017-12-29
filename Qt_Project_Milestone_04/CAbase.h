@@ -1042,45 +1042,68 @@ inline void CAbase::worldEvolutionFluids() {
 
 // GASES
 inline void CAbase::cellEvolutionGases(int x, int y) {
-    /* */
+    /* rotate cells within each Margolus block */
 
-    position down = torifyPosition(convert(x, y, 2));
-    position up = torifyPosition(convert(x, y, 8));
-    position left  = torifyPosition(convert(x, y, 4));
-    position right = torifyPosition(convert (x, y, 6));
-    position downLeft = torifyPosition(convert(convert(x, y, 2).x, convert(x, y, 2).y, 4));
-    position downRight = torifyPosition(convert(convert(x, y, 2).x, convert(x, y, 2).y, 6));
-    position upLeft = torifyPosition(convert(convert(x, y, 8).x, convert(x, y, 8).y, 4));
-    position upRight = torifyPosition(convert(convert(x, y, 8).x, convert(x, y, 8).y, 6));
+    bool rotationDir = rand() % 2;
 
-    int newErosion = getValue(x, y) &
-                   (getValue(up.x, up.y) | getValue(upLeft.x, upLeft.y) | getValue(upRight.x, upRight.y)) &
-                   (getValue(right.x, right.y) | getValue(downRight.x, downRight.y) | getValue(upRight.x, upRight.y)) &
-                   (getValue(down.x, down.y) | getValue(downRight.x, downRight.y) | getValue(downLeft.x, downLeft.y)) &
-                   (getValue(left.x, left.y) | getValue(downLeft.x, downLeft.y) | getValue(upLeft.x, upLeft.y));
-    setValueNew(x, y, newErosion);
+    if (rotationDir == 0) { // rotate clockwise
+        setValueNew(x, y, getValue(x, y + 1));
+        setValueNew(x, y + 1, getValue(x + 1, y + 1));
+        setValueNew(x + 1, y + 1, getValue(x + 1, y));
+        setValueNew(x + 1, y, getValue(x, y));
+
+
+    } else { // rotate counter clockwise
+        setValueNew(x, y, getValue(x + 1, y));
+        setValueNew(x + 1, y, getValue(x + 1, y + 1));
+        setValueNew(x + 1, y + 1, getValue(x, y + 1));
+        setValueNew(x, y + 1, getValue(x, y));
+    }
 }
 
 
 inline void CAbase::worldEvolutionGases() {
     /* apply cell evolution to the universe */
 
+    // save initial state for later comparison
+    int* worldInitial = new int[(Nx + 2) * (Ny + 2) + 1];
     for (int ix = 1; ix <= Nx; ix++) {
         for (int iy = 1; iy <= Ny; iy++) {
-            cellEvolutionGases(ix, iy);
+            worldInitial[iy * (Nx + 2) + ix] = world[iy * (Nx + 2) + ix];
+        }
+    }
+
+    // first type of Margolus neighborhood
+    for (int ix = 1; ix <= int(Nx / 2); ix++) {
+        for (int iy = 1; iy <= int(Ny / 2); iy++) {
+            cellEvolutionGases(2 * ix - 1, 2 * iy - 1);
+        }
+    }
+    // copy back
+    for (int ix = 1; ix <= Nx; ix++) {
+        for (int iy = 1; iy <= Ny; iy++) {
+            world[iy * (Nx + 2) + ix] = worldNew[iy * (Nx + 2) + ix];
+        }
+    }
+
+    // second type of Margolus neighborhood
+    for (int ix = 1; ix <= int(Nx / 2 - 1); ix++) {
+        for (int iy = 1; iy <= int(Ny / 2 - 1); iy++) {
+            cellEvolutionGases(2 * ix, 2 * iy);
         }
     }
 
     nochanges = true;
-    /* copy new states to current states */
     for (int ix = 1; ix <= Nx; ix++) {
         for (int iy = 1; iy <= Ny; iy++) {
-            if (world[iy * (Nx + 2) + ix] != worldNew[iy * (Nx + 2) + ix]) {
+            if (worldInitial[iy * (Nx + 2) + ix] != worldNew[iy * (Nx + 2) + ix]) {
                 nochanges = false;
             }
+            // copy back
             world[iy * (Nx + 2) + ix] = worldNew[iy * (Nx + 2) + ix];
         }
     }
+    delete[] worldInitial;
 }
 
 
