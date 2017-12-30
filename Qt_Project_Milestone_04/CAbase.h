@@ -1046,18 +1046,25 @@ inline void CAbase::cellEvolutionGases(int x, int y) {
 
     bool rotationDir = rand() % 2;
 
+    // make sure to identify boundaries in toric setting
+    int xTorus = x + 1;
+    int yTorus = y + 1;
+
+    if (x == Nx) xTorus = 1;
+    if (y == Ny) yTorus = 1;
+
     if (rotationDir == 0) { // rotate clockwise
-        setValueNew(x, y, getValue(x, y + 1));
-        setValueNew(x, y + 1, getValue(x + 1, y + 1));
-        setValueNew(x + 1, y + 1, getValue(x + 1, y));
-        setValueNew(x + 1, y, getValue(x, y));
+        setValueNew(x, y, getValue(x, yTorus));
+        setValueNew(x, yTorus, getValue(xTorus, yTorus));
+        setValueNew(xTorus, yTorus, getValue(xTorus, y));
+        setValueNew(xTorus, y, getValue(x, y));
 
 
     } else { // rotate counter clockwise
-        setValueNew(x, y, getValue(x + 1, y));
-        setValueNew(x + 1, y, getValue(x + 1, y + 1));
-        setValueNew(x + 1, y + 1, getValue(x, y + 1));
-        setValueNew(x, y + 1, getValue(x, y));
+        setValueNew(x, y, getValue(xTorus, y));
+        setValueNew(xTorus, y, getValue(xTorus, yTorus));
+        setValueNew(xTorus, yTorus, getValue(x, yTorus));
+        setValueNew(x, yTorus, getValue(x, y));
     }
 }
 
@@ -1087,8 +1094,8 @@ inline void CAbase::worldEvolutionGases() {
     }
 
     // second type of Margolus neighborhood
-    for (int ix = 1; ix <= int(Nx / 2 - 1); ix++) {
-        for (int iy = 1; iy <= int(Ny / 2 - 1); iy++) {
+    for (int ix = 1; ix <= int(Nx / 2); ix++) {
+        for (int iy = 1; iy <= int(Ny / 2); iy++) {
             cellEvolutionGases(2 * ix, 2 * iy);
         }
     }
